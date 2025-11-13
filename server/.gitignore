@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Environment variables (注释掉以便开发配置)
+# .env
+# .env.local
+# .env.production
+
+# Database
+database.sqlite
+*.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
