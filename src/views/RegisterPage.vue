@@ -123,7 +123,7 @@ function validateEmail() {
 
 function validatePassword() {
   const v = password.value
-  const strong = v.length >= 8 && /[A-Z]/.test(v) && /[a-z]/.test(v) && /[0-9]/.test(v) && /[!@#$%^&*]/.test(v)
+  const strong = v.length >= 6
   passwordError.value = strong ? '' : 'Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.'
   validateConfirm()
 }

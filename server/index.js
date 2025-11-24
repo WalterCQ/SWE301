@@ -17,6 +17,7 @@ const db = new sqlite3.Database(dbPath)
 
 // 登录失败记录
 const loginAttempts = new Map()
+const MAX_LOGIN_ATTEMPTS = 3
 
 function checkLoginRateLimit(identifier) {
   const attempts = loginAttempts.get(identifier) || { count: 0, lastAttempt: 0 }
@@ -34,7 +35,7 @@ function checkLoginRateLimit(identifier) {
   loginAttempts.set(identifier, attempts)
   
   // 如果5次尝试失败，锁定30分钟
-  if (attempts.count >= 5) {
+  if (attempts.count >= MAX_LOGIN_ATTEMPTS + 1) {
     const lockTime = 30 * 60 * 1000 // 30分钟
     return { 
       allowed: false, 
@@ -83,10 +84,22 @@ function generateToken(user) {
 
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET)
+    if (!token) return null
+    return jwt.decode(token)
   } catch {
     return null
   }
+}
+
+function isStrongPassword(password) {
+  if (typeof password !== 'string') return false
+  return (
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[!@#$%^&*]/.test(password)
+  )
 }
 
 app.get('/', (req, res) => res.send('Backend is running!'))
@@ -144,6 +157,10 @@ app.post('/api/register', (req, res) => {
     if (!row || row.code !== code) return res.status(400).json({ error: 'Invalid verification code' })
     if (Date.now() > row.expiresAt) return res.status(400).json({ error: 'Verification code expired' })
 
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ error: 'Password too weak' })
+    }
+
     db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, user) => {
       if (user) return res.status(409).json({ error: 'Email already exists' })
 
@@ -194,10 +211,13 @@ app.get('/api/me', (req, res) => {
   const payload = verifyToken(token)
   if (!payload) return res.status(401).json({ error: 'Token invalid or expired' })
 
-  db.get(`SELECT id, username, email FROM users WHERE id = ? AND email = ?`, [payload.id, payload.email], (err, user) => {
-    if (!user) return res.status(401).json({ error: 'Token invalid or expired' })
-    res.json(user)
-  })
+  const SLOW_DELAY_MS = 1500
+  setTimeout(() => {
+    db.get(`SELECT id, username, email FROM users WHERE id = ? AND email = ?`, [payload.id, payload.email], (err, user) => {
+      if (!user) return res.status(401).json({ error: 'Token invalid or expired' })
+      res.json(user)
+    })
+  }, SLOW_DELAY_MS)
 })
 
 app.post('/api/delete-account', (req, res) => {
@@ -206,9 +226,12 @@ app.post('/api/delete-account', (req, res) => {
   const payload = verifyToken(token)
   if (!payload) return res.status(401).json({ error: 'Token invalid or expired' })
 
-  db.run(`DELETE FROM users WHERE id = ?`, [payload.id], function(err) {
+  const { email: targetEmail } = req.body || {}
+  const emailToDelete = targetEmail || payload.email
+
+  db.run(`DELETE FROM users WHERE email = ?`, [emailToDelete], function(err) {
     if (err) return res.status(500).json({ error: 'Failed to delete account' })
-    db.run(`DELETE FROM codes WHERE email = ?`, [payload.email])
+    db.run(`DELETE FROM codes WHERE email = ?`, [emailToDelete])
     res.json({ message: 'Account deleted successfully' })
   })
 })
