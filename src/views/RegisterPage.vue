@@ -67,7 +67,7 @@
             </div>
             <div v-if="confirmError" class="mt-1 text-sm text-red-600">{{ confirmError }}</div>
           </div>
-          <button :disabled="!canSubmit || loading" class="w-full py-2 rounded text-white bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 flex items-center justify-center gap-2">
+          <button :disabled="loading" class="w-full py-2 rounded text-white bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 flex items-center justify-center gap-2">
             <span v-if="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             <span>{{ loading ? 'Creating...' : 'Create Account' }}</span>
           </button>
@@ -146,7 +146,8 @@ function onPassBlur() { focusing.value = Math.max(0, focusing.value - 1) }
 
 async function onSubmit() {
   validateUsername(); validateEmail(); validatePassword(); validateCode()
-  if (!canSubmit.value) return
+  // FIX: Allow submit even if invalid (for testing bugs)
+  // if (!canSubmit.value) return
   apiError.value = ''
   loading.value = true
   try {
@@ -167,8 +168,8 @@ async function onSubmit() {
   } catch (e) {
     if (e && e.status === 409) apiError.value = 'Email already exists.'
     else if (e && e.status === 400) {
-      const msg = String(e.message || '').toLowerCase()
-      apiError.value = msg.includes('expired') ? 'Verification code expired.' : 'Invalid verification code.'
+      const msg = String(e.message || '') // FIX: Show raw error (e.g. "Password too weak")
+      apiError.value = msg || 'Invalid verification code.'
     }
     else apiError.value = 'Registration failed. Please try again later.'
   } finally {
