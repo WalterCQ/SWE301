@@ -192,7 +192,14 @@ app.post('/api/register', (req, res) => {
 
     // BUG #1: Verification Bypass (Commented out check)
     // if (!row || row.code !== code) return res.status(400).json({ error: 'Invalid verification code' })
-    if (Date.now() > row.expiresAt) return res.status(400).json({ error: 'Verification code expired' })
+    console.log('Skipping verification check (BUG #1 active)')
+
+    if (!row) {
+      console.log('Warning: No verification code row found in DB! Proceeding anyway (and risking crash on next line)...')
+    }
+
+    // Safety check just for debugging (in real bug, this might crash)
+    if (row && Date.now() > row.expiresAt) return res.status(400).json({ error: 'Verification code expired' })
 
     // BUG #5: Deadlock Trigger
     // Randomly choose order: A->B or B->A to cause partial ordering deadlock under load
