@@ -2,7 +2,8 @@ const { Resend } = require('resend')
 
 // 初始化 Resend 客户端
 console.log('API Key loaded:', process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 10)}...` : 'NOT SET')
-const resend = new Resend(process.env.RESEND_API_KEY)
+// FIX: Use dummy key to prevent crash if not set. Email functionality will just fail gracefully.
+const resend = new Resend(process.env.RESEND_API_KEY || 're_disabled')
 
 // 验证邮件配置
 async function verifyEmailConfig() {
@@ -11,7 +12,7 @@ async function verifyEmailConfig() {
       console.log('Resend API key not configured')
       return false
     }
-    
+
     // 测试发送一个简单的验证请求
     const { data } = await resend.domains.list()
     console.log('Resend is ready to send messages')
