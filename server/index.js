@@ -146,7 +146,9 @@ function generateVerificationCode() {
 
 app.post('/api/send-code', async (req, res) => {
   const { email } = req.body
+  console.log(`[DEBUG] /api/send-code called for ${email}`)
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    console.log('[DEBUG] Invalid email format')
     return res.status(400).json({ error: 'Invalid email' })
   }
 
@@ -173,7 +175,11 @@ app.post('/api/send-code', async (req, res) => {
     // 保存验证码到数据库
     db.run(`INSERT OR REPLACE INTO codes (email, code, sentAt, expiresAt) VALUES (?, ?, ?, ?)`,
       [email, code, sentAt, expiresAt], (err) => {
-        if (err) return res.status(500).json({ error: 'Failed to save verification code' })
+        if (err) {
+          console.error('[DEBUG] DB Insert Error:', err.message)
+          return res.status(500).json({ error: 'Failed to save verification code' })
+        }
+        console.log('[DEBUG] DB Insert Success')
         return res.json({ message: 'Verification code sent' })
       })
   })
