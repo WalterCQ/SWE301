@@ -114,13 +114,14 @@ cat > ecosystem.config.js << 'EOF'
 module.exports = {
   apps: [{
     name: 'swe301-backend',
-    script: './server/index.js',
+    script: './start_lab.sh',  // 使用启动脚本以支持自动重启
     env: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 3000,
+      AUTO_RESTART_DELAY: 600000 // 10分钟自动重启
     },
-    instances: 'max',
-    exec_mode: 'cluster',
+    instances: 1,  // 必须是1，由脚本控制重启
+    exec_mode: 'fork', // 必须是fork模式
     error_file: './logs/error.log',
     out_file: './logs/out.log',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z'
@@ -600,6 +601,16 @@ echo "后端: http://localhost:3000"
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
+---
+
+## 🕒 自动重启机制
+
+本项目包含了一个 `start_lab.sh` 脚本和内置的自杀定时器，用于在教学场景下定期重置服务器状态（清除死锁和内存污染）。
+
+- 默认每 10 分钟自动重启一次。
+- 可通过 `AUTO_RESTART_DELAY` 环境变量配置时间（毫秒）。
+- PM2 配置已更新为使用 `start_lab.sh` 作为启动入口。
 
 ---
 

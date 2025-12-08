@@ -145,18 +145,18 @@ function onPassFocus() { focusing.value++ }
 function onPassBlur() { focusing.value = Math.max(0, focusing.value - 1) }
 
 async function onSubmit() {
-  validateUsername(); validateEmail(); validatePassword(); validateConfirm(); validateCode()
+  validateUsername(); validateEmail(); validatePassword(); validateCode()
   if (!canSubmit.value) return
   apiError.value = ''
   loading.value = true
   try {
     await auth.register({ username: username.value, email: email.value, password: password.value, code: code.value })
-    // BUG: 注册成功后没有重置form，导致表单仍有数据
-    // username.value = ''
-    // email.value = ''
-    // password.value = ''
-    // confirmPassword.value = ''
-    // code.value = ''
+    // FIX: Reset form data
+    username.value = ''
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+    code.value = ''
     usernameError.value = ''
     emailError.value = ''
     passwordError.value = ''
@@ -183,7 +183,10 @@ async function onSendCode() {
   sendSuccess.value = false
   sendError.value = ''
   try {
-    // BUG: 前端未检查发送间隔，允许短时间内频繁发送，后端才有速率限制
+    // FIX: Check cooldown before sending
+    if (cooldown.value > 0) {
+      return
+    }
     await api.post('/send-code', { email: email.value })
     sendSuccess.value = true
     startCooldown(60)

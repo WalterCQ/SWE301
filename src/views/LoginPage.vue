@@ -10,7 +10,7 @@
         <form @submit.prevent="onSubmit" class="space-y-4">
           <div>
             <label class="block text-sm text-gray-700 mb-1">Email or Username</label>
-            <input type="text" v-model.trim="email" @blur="validateEmail" autocomplete="off-typo" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            <input type="text" v-model.trim="email" @blur="validateEmail" autocomplete="off" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-400" />
             <div v-if="emailError" class="mt-1 text-sm text-red-600">{{ emailError }}</div>
           </div>
           <div>
