@@ -3,6 +3,16 @@
 # Configuration
 RESTART_DELAY=2  # Seconds to wait before restarting
 
+# Cleanup function - kills any orphan node processes
+cleanup() {
+    echo "Cleaning up old processes..."
+    pkill -9 -f "node index.js" 2>/dev/null
+    sleep 1
+}
+
+# Ensure clean start
+cleanup
+
 echo "Starting SWE301 Lab Server in Auto-Restart Mode..."
 echo "Press [CTRL+C] to stop the server loop."
 
@@ -33,6 +43,10 @@ while true; do
         break
     fi
     
+    # Clean up any zombie processes before restart
+    cleanup
+    
     echo "Restarting in $RESTART_DELAY seconds..."
     sleep $RESTART_DELAY
 done
+
