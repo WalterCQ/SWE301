@@ -11,6 +11,11 @@ while true; do
     echo "$(date): Server starting..."
     echo "----------------------------------------"
     
+    # Ensure database permissions are correct (prevents recurring permission issues)
+    touch server/database.sqlite 2>/dev/null
+    chmod 666 server/database.sqlite 2>/dev/null
+    chmod 777 server 2>/dev/null
+    
     # Run the server
     # Set AUTO_RESTART_DELAY for the node process (e.g., 600000 ms = 10 mins)
     # You can override this with env var: AUTO_RESTART_DELAY=600000 ./start_lab.sh
